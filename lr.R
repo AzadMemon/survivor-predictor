@@ -1,64 +1,70 @@
+# 1 PassengerId
+# 2 Survived
+# 3 Pclass
+# 4 Name
+# 5 Sex
+# 6 Age
+# 7 SibSp
+# 8 Parch
+# 9 Ticket
+# 10 Fare
+# 11 Cabin
+# 12 Embarked
+
 library(sigmoid)
 
-
-
-gradFunction <- function (X, Y) {
-  function (theta) {
-    h <- sigmoid(initialTheta %*% X)
-    1/m * (h - Y) * t(X)
-  }
-}
-
-costFunction <- function (X, Y) {
-  numTrainExamples <- ncol(trainDataX)
-  
-  function (theta) {
-    h <- sigmoid(initialTheta %*% X)
-    -1/numTrainExamples * sum(Y*log(h) + (1-Y)*log(1-h)) + lambda/(2*numTrainExamples)*sum(theta %*% t(theta))
-  }
-}
-
-trainData <- read.csv("train.csv",stringsAsFactors=FALSE)
-
-trainDataX <- t(cbind(1, trainData[,-c(1,2,4,9,11)]))
+# Training
+trainData <- read.csv("train.csv")
+trainData <- model.matrix(
+  ~ Survived + Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, 
+  dat = trainData
+)
+trainDataX <- t(trainData[,-c(1,2)])
+trainDataX <- rbind(1, trainDataX)
 trainDataY <- t(trainData[,2])
 
-# Need to clean up data
-trim(trainDataX)
-for (i in c(1:numTrainExamples)) {
-  if (trainDataX[8,i] == "C") {
-    trainDataX[8,i] <- 1
-  } else if (trainDataX[8,i] == "Q") {
-    trainDataX[8,i] <- 2
-  } else {
-    trainDataX[8,i] <- 3
-  }
+
+gradFunction <- function (lambda, X, Y) {
+  numTrainExamples <- ncol(X)
   
-  if (trainDataX[3, i] == "male") {
-    trainDataX[3, i] <- 1
-  } else {
-    trainDataX[3, i] <- 2
-  }
-  
-  for (j in c(1:8)) {
-    if (is.na(trainDataX[j,i])) {
-      trainDataX[j, i] <- -1 
-    } else {
-      trainDataX[j, i] <- as.numeric(as.character(trainDataX[j, i]))
-    }
+  function (theta) {
+    h <- sigmoid(theta %*% X)
+    return(1/numTrainExamples * ((h - Y) %*% t(X))) #+ cbind(0, lambda/numTrainExamples * thetaWithoutBias)
   }
 }
 
-initialTheta<- matrix(0, 1, 10)
-numTrainExamples <- ncol(trainDataX)
-lambda <- 3
+costFunction <- function (lambda, X, Y) {
+  numTrainExamples <- ncol(X)
+  
+  function (theta) {
+    h <- sigmoid(theta %*% X)
+    -1/numTrainExamples * sum(Y*log(h) + (1-Y)*log(1-h)) #+ lambda/(2*numTrainExamples)*sum(thetaWithoutBias %*% t(thetaWithoutBias))
+  }
+}
 
-print(trainDataX[,1])
+#J = 1/m * [(-1 .* y') * log(sigmoid(X*theta)) - (1 .- y') * log(1 .- sigmoid(X*theta))]
+#grad = 1/m .* [X' * (sigmoid(X*theta) - y)]
 
-fn <- costFunction(trainDataX, trainDataY)
-gr <- gradFunction(trainDataX, trainDataY)
+initialTheta <- matrix(0, 1, 10)
+#lambda <- 3
 
-result <- optim(initialTheta, fn, gr, method="L-BFGS-B", control=list(maxit=500,trace=4))
+fn <- costFunction(lambda, trainDataX, trainDataY)
+gr <- gradFunction(lambda, trainDataX, trainDataY)
 
-print(result)
+result <- optim(initialTheta, fn, gr, method="BFGS", control=list(maxit=500,trace=4))
+
+
+# Testing
+testData <- read.csv("test.csv")
+testData <- model.matrix(
+  ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+  dat = testData
+)
+testData <- t(testData)
+testData <- rbind(1, testData)
+
+predictions <- round(t(sigmoid(result$par %*% testData)))
+
+write.csv(predictions, file="output.csv", row.names = FALSE, col.names = c("Survived"))
+
 
