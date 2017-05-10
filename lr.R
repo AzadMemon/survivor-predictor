@@ -13,23 +13,14 @@
 
 library(sigmoid)
 
-# Training
-trainData <- read.csv("train.csv")
-trainData <- model.matrix(
-  ~ Survived + Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, 
-  dat = trainData
-)
-trainDataX <- t(trainData[,-c(1,2)])
-trainDataX <- rbind(1, trainDataX)
-trainDataY <- t(trainData[,2])
-
 
 gradFunction <- function (lambda, X, Y) {
   numTrainExamples <- ncol(X)
   
   function (theta) {
     h <- sigmoid(theta %*% X)
-    return(1/numTrainExamples * ((h - Y) %*% t(X))) #+ cbind(0, lambda/numTrainExamples * thetaWithoutBias)
+    thetaWithoutBias <- theta[-1]
+    return(1/numTrainExamples * ((h - Y) %*% t(X))) + cbind(0, lambda/numTrainExamples * thetaWithoutBias)
   }
 }
 
@@ -38,33 +29,63 @@ costFunction <- function (lambda, X, Y) {
   
   function (theta) {
     h <- sigmoid(theta %*% X)
-    -1/numTrainExamples * sum(Y*log(h) + (1-Y)*log(1-h)) #+ lambda/(2*numTrainExamples)*sum(thetaWithoutBias %*% t(thetaWithoutBias))
+    thetaWithoutBias <- theta[-1]
+    -1/numTrainExamples * sum(Y*log(h) + (1-Y)*log(1-h)) + lambda/(2*numTrainExamples)*sum(thetaWithoutBias %*% t(thetaWithoutBias))
   }
 }
 
-#J = 1/m * [(-1 .* y') * log(sigmoid(X*theta)) - (1 .- y') * log(1 .- sigmoid(X*theta))]
-#grad = 1/m .* [X' * (sigmoid(X*theta) - y)]
 
+# Read in training data
+trainData <- read.csv("train.csv")
+
+# Convert the dataframe to a matrix 
+options(na.action='na.pass')
+trainData <- model.matrix(
+  ~ Survived + Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, 
+  dat = trainData
+)
+trainData[is.na(trainData)] <- -1
+
+# Set up X & Y
+trainDataX <- t(trainData[,-c(1,2)])
+trainDataX <- rbind(1, trainDataX)
+
+trainDataY <- t(trainData[,2])
+
+# Set up initialTheta & lambda
 initialTheta <- matrix(0, 1, 10)
-#lambda <- 3
+lambda <- 3
 
 fn <- costFunction(lambda, trainDataX, trainDataY)
 gr <- gradFunction(lambda, trainDataX, trainDataY)
 
 result <- optim(initialTheta, fn, gr, method="BFGS", control=list(maxit=500,trace=4))
 
-
 # Testing
 testData <- read.csv("test.csv")
+
+options(na.action='na.pass')
 testData <- model.matrix(
-  ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+  ~ PassengerId + Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
   dat = testData
 )
+
+# keep track of passengerIds
+passengerIds <- testData[,2]
+
+# Set NA to -1
+testData <- testData[,-2]
+testData[is.na(testData)] <- -1
+
 testData <- t(testData)
 testData <- rbind(1, testData)
 
+# Calculate predictions
 predictions <- round(t(sigmoid(result$par %*% testData)))
 
-write.csv(predictions, file="output.csv", row.names = FALSE, col.names = c("Survived"))
+# Write to file
+output <- cbind(passengerIds, predictions)
+colnames(output) <- c("PassengerId", "Survived")
+write.csv(output, file="output.csv", row.names = FALSE)
 
 

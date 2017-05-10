@@ -1,6 +1,7 @@
 test.csv
 train.csv
 gender_submission.csv
+output.csv
+
 .RData
 .Rhistory
-output.csv
