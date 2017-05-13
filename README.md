@@ -24,7 +24,8 @@ trainData <- read.csv("train.csv")
 ```
 str(trainData)
 ```
->'data.frame':	891 obs. of  12 variables:
+```
+'data.frame':	891 obs. of  12 variables:
  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
  $ Survived   : int  0 1 1 1 0 0 0 0 1 1 ...
  $ Pclass     : int  3 1 3 1 3 3 1 3 3 2 ...
@@ -37,12 +38,13 @@ str(trainData)
  $ Fare       : num  7.25 71.28 7.92 53.1 8.05 ...
  $ Cabin      : Factor w/ 148 levels "","A10","A14",..: 1 83 1 57 1 1 131 1 1 1 ...
  $ Embarked   : Factor w/ 4 levels "","C","Q","S": 4 2 4 4 4 3 4 4 4 2 ...
+```
 
 The output shows the label for the column, the type that R has inferred for that column, followed by a sample of the data in the column.
 
 Two things should pop out at this point:
-..1. `data.frame`
-..2. `Factor`
+  1. `data.frame`
+  2. `Factor`
 
 The first is a fundamental data structure in R. I as a beginner knew of data structures such as `matrix` and `vector`, but `data.frame` was new.
 `data.frame` is described as sort of a matrix like structure. In this case, the columns represent a training example, and the rows represent a feature.
@@ -50,4 +52,4 @@ The first is a fundamental data structure in R. I as a beginner knew of data str
 `Factor` are akin to enumerated types in other languages. They take on a limited number of different values.
 
 3. Feature Engineering
-Here's where we do some interesting things.
+..1. One of the first things we can tackle, relatively easily, is names. We have well formatted names with titles. We can easily get the last name (thereby identifying families), as well as titles. This way we can attempt to see relations between survival and size of family, or title.
