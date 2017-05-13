@@ -11,19 +11,7 @@ After submitting and getting a score of 0.45/1, I decided to do the tutorial tha
 
 I'm also relatively new to R so if you have any feedback, feel free to make an issue!
 
-# Setup
-You can either setup in Rstudio, or write the script in any editor and run in the terminal using the command `Rscript <file>`
-
-# Steps
-1. ### Read in the training data set
-```
-trainData <- read.csv("train.csv")
-```
-
-2. ### Try and get an idea of the data you're dealing with
-```
-str(trainData)
-```
+# Glimpse at the kind of data set given by kaggle
 ```
 'data.frame':	891 obs. of  12 variables:
  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
@@ -39,28 +27,3 @@ str(trainData)
  $ Cabin      : Factor w/ 148 levels "","A10","A14",..: 1 83 1 57 1 1 131 1 1 1 ...
  $ Embarked   : Factor w/ 4 levels "","C","Q","S": 4 2 4 4 4 3 4 4 4 2 ...
 ```
-
-The output shows the label for the column, the type that R has inferred for that column, followed by a sample of the data in the column.
-
-Two things should pop out at this point:
-  1. `data.frame`
-  2. `Factor`
-
-The first is a fundamental data structure in R. I as a beginner knew of data structures such as `matrix` and `vector`, but `data.frame` was new.
-`data.frame` is described as sort of a matrix like structure. In this case, the columns represent a training example, and the rows represent a feature.
-
-`Factor` are akin to enumerated types in other languages. They take on a limited number of different values.
-
-3. ### Feature Engineering
-For any of the features we have, or create, we can visualise the data to attempt to see if what we hypothesise is actually true. For exmaple, if we create the feature `family_size`, then we can visualize that against survival, and attempt to see if there's any obvious correlations.
-
-  1. One of the first things we can tackle, relatively easily, is names. We have well formatted names with titles. We can easily get the last name (thereby identifying families), as well as titles. This way we can attempt to see relations between survival and size of family, or title.
-  2. Now that we have titles, we can group rare titles such as captain into one title "Rare Title".
-  3. Using the family name we can also add a new feature, family size.
-  4. The cabin variable also includes the deck. So we can parse deck out, and add it as a separate feature.
-  5. We can also add a mother and child designation by looking at age, family name, and title
-
-4. ### Imputation
-Imputation is the process of replacing missing data with subsituted values.
-
-  1. The Embarked row is missing a value for a couple passengers. If we visualise the data
